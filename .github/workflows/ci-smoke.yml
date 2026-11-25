@@ -1,0 +1,32 @@
+name: CI skill smoke
+
+on:
+  push:
+    branches: ["cloudagent/**"]
+    paths:
+      - "**/*.md"
+      - ".github/workflows/ci-smoke.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: Check tracked Markdown files
+        run: |
+          test -s README.md
+          test -s AGENTS.md
+          test -s .opencode/skills/deterministic-ci/SKILL.md
+          git ls-files -z -- '*.md' | xargs -0 -r -n 1 test -s
+          printf 'CI_SKILL_SMOKE_OK fluxion\n'
